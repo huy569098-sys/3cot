@@ -1,0 +1,30 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Roulette 2 Cột + 6 Số</title>
+<style>body{background:#07111d;color:#eef6ff;font-family:system-ui;margin:0}.w{max-width:1050px;margin:auto;padding:16px}.c{background:#0e1d2d;border:1px solid #29455f;border-radius:14px;padding:15px;margin:12px 0}textarea{width:100%;height:140px;background:#050b13;color:white;border:1px solid #34516d;border-radius:9px;padding:10px;box-sizing:border-box;font-size:16px}button{padding:11px 16px;border:0;border-radius:9px;background:#4ade80;font-weight:900}.big{font-size:29px;font-weight:950;color:#5ee69d}.g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.b{background:#08131f;padding:10px;border-radius:9px;text-align:center}.v{font-size:21px;font-weight:900}.m{color:#a9bdcf}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #29455f;text-align:center}.note{border-left:3px solid #ffd166;background:#29220e;padding:10px;border-radius:8px}@media(max-width:700px){.g{grid-template-columns:repeat(2,1fr)}}</style></head><body><div class=w>
+<h1>🎯 Roulette — 2 Cột Chính + 6 Số V1</h1><p class=m>Cùng dữ liệu = cùng kết luận. Chọn 2 cột đầy đủ, rồi chọn 6/12 số của cột còn lại.</p>
+<div class=c><h3>1. Nhập lịch sử 0–36 (cũ → mới)</h3><textarea id=i placeholder="22 5 17 31 0 14 8 26 3 ..."></textarea><br><button onclick=go()>🧠 PHÂN TÍCH</button><p id=msg></p></div>
+<div class=c><h3>2. Kết luận</h3><div id=out class=big>—</div><p id=det></p><p id=cover></p></div>
+<div class=c><h3>3. Walk-Forward</h3><div id=stats class=g></div><p class=m id=bi></p></div>
+<div class=c><h3>4. Điểm 3 cột</h3><div id=cols></div></div>
+<div class=c><h3>5. Xếp 12 số cột phụ</h3><div id=nums></div></div>
+<div class=c><div class=note>Backtest chỉ hiển thị lịch sử, không cộng vào điểm hiện tại. 0 không thuộc cột. Nếu không đánh 0 thì vùng chọn là 30/37 số. Công cụ nghiên cứu chuỗi không tạo ra bảo đảm dự đoán vòng quay độc lập.</div></div>
+</div><script>
+C={1:[1,4,7,10,13,16,19,22,25,28,31,34],2:[2,5,8,11,14,17,20,23,26,29,32,35],3:[3,6,9,12,15,18,21,24,27,30,33,36]};
+co=n=>n?((n-1)%3)+1:0; D=()=>((i.value.match(/\d+/g)||[]).map(Number).filter(x=>x>=0&&x<=36));
+function cs(d,c){let a=d.map(co),N=a.length,s=0,y=0,last=a[N-1],x=[];for(let k=1;k<N;k++)if(a[k-1]==last)x.push(a[k]);let q=(x.filter(v=>v==c).length+1)/(x.length+3),z=q-1/3;s+=z*.9;if(z>.04)y++;
+let key=a.slice(-2).join(),b=[];for(let k=2;k<N;k++)if(a.slice(k-2,k).join()==key)b.push(a[k]);q=(b.filter(v=>v==c).length+.8)/(b.length+2.4);z=q-1/3;s+=z*.7;if(z>.05)y++;
+let r=a.slice(-12).filter(v=>v);z=r.filter(v=>v==c).length/Math.max(1,r.length)-1/3;s+=z*.18;if(z>.07)y++;
+let p=[];for(let k=0;k<N;k++)if(a[k]==c)p.push(k);let gap=p.length?N-1-p.at(-1):N,g=[];for(let k=1;k<p.length;k++)g.push(p[k]-p[k-1]);let av=g.length?g.slice(-5).reduce((u,v)=>u+v,0)/Math.min(5,g.length):3,rr=1-Math.min(1,Math.abs(gap-av)/(av+1));s+=(rr-.5)*.12;if(rr>.72)y++;return{c,s,y}}
+function ns(d,n){let N=d.length,s=0,y=0,last=d[N-1],x=[];for(let k=1;k<N;k++)if(d[k-1]==last)x.push(d[k]);let base=1/37,q=(x.filter(v=>v==n).length+.35)/(x.length+12.95),z=q-base;s+=z*4;if(z>.012)y++;
+let p=[];for(let k=0;k<N;k++)if(d[k]==n)p.push(k);let gap=p.length?N-1-p.at(-1):N,g=[];for(let k=1;k<p.length;k++)g.push(p[k]-p[k-1]);let av=g.length?g.slice(-4).reduce((u,v)=>u+v,0)/Math.min(4,g.length):18,rr=1-Math.min(1,Math.abs(gap-av)/(av+2));s+=(rr-.5)*.06;if(rr>.75)y++;
+let r=d.slice(-18),f=r.filter(v=>v==n).length;s+=(f/18-base)*.08;if(f>=2)y++;
+let fl=0,t=0;for(let k=Math.max(1,N-25);k<N;k++)if(Math.abs(d[k-1]-n)<=3){t++;if(d[k]==n)fl++}q=(fl+.25)/(t+9.25);z=q-base;s+=z*2;if(z>.015)y++;return{n,s,y}}
+function pick(d){let a=[1,2,3].map(c=>cs(d,c)).sort((x,y)=>y.s-x.s||y.y-x.y||x.c-y.c),main=[a[0].c,a[1].c].sort(),sp=a[2].c,n=C[sp].map(v=>ns(d,v)).sort((x,y)=>y.s-x.s||y.y-x.y||x.n-y.n);return{main,sp,n,a}}
+function bt(d){let st=Math.min(30,Math.max(20,Math.floor(d.length*.55))),T=0,W=0,L=0,M=0,E=0,Z=0;for(let j=st;j<d.length;j++){let q=pick(d.slice(Math.max(0,j-60),j)),v=d[j];T++;if(v==0){L++;Z++}else if(q.main.includes(co(v))){W++;M++}else if(q.n.slice(0,6).some(x=>x.n==v)){W++;E++}else L++}return{st,T,W,L,M,E,Z}}
+function go(){let d=D();msg.innerHTML="Đọc được <b>"+d.length+"</b> ván.";if(d.length<30){out.textContent="CHƯA ĐỦ 30 VÁN";return}let q=pick(d.slice(-60)),six=q.n.slice(0,6).map(x=>x.n).sort((a,b)=>a-b),ex=q.n.slice(6).map(x=>x.n).sort((a,b)=>a-b),z=bt(d);
+out.textContent="CỘT "+q.main[0]+" + CỘT "+q.main[1]+" | THÊM 6 SỐ CỘT "+q.sp;det.innerHTML="<b>6 số thêm:</b> "+six.join(", ")+"<br><b>6 số loại:</b> "+ex.join(", ")+"<br><b>0:</b> ngoài 3 cột.";
+cover.innerHTML="<b>30 số chọn:</b> "+[...C[q.main[0]],...C[q.main[1]],...six].sort((a,b)=>a-b).join(", ");
+stats.innerHTML=[["Ván test",z.T],["Thắng",z.W],["Thua",z.L],["Tỷ lệ",z.T?(100*z.W/z.T).toFixed(1)+"%":"—"],["Trúng 2 cột",z.M],["Trúng 6 số",z.E],["Ra 0",z.Z],["Bắt đầu test",z.st+1]].map(x=>'<div class=b>'+x[0]+'<div class=v>'+x[1]+'</div></div>').join("");
+bi.innerHTML="Mốc phủ cố định 30/37 ≈ <b>81,1%</b>. Walk-Forward mỗi ván chỉ dùng dữ liệu đứng trước ván test.";
+cols.innerHTML=q.a.slice().sort((a,b)=>a.c-b.c).map(x=>"Cột <b>"+x.c+"</b>: điểm "+x.s.toFixed(3)+" · "+x.y+"/4 tín hiệu "+(q.main.includes(x.c)?"★ CHÍNH":"→ PHỤ")).join("<br>");
+nums.innerHTML=q.n.map((x,k)=>"Số <b>"+x.n+"</b>: "+x.s.toFixed(3)+" · "+x.y+"/4 tín hiệu "+(k<6?"★ CHỌN":"— loại")).join("<br>")}
+</script></body></html>
